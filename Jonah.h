@@ -1,5 +1,5 @@
-#ifndef Jonah_INCLUDED
-#define Jonah_INCLUDED 
+#ifndef JONAH_INCLUDED
+#define JONAH_INCLUDED 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
