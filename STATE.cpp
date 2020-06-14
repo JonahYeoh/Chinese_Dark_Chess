@@ -1,4 +1,5 @@
 #include "STATE.h"
+#include <cstring>
 State::State()
 {
 	memset( board, 0, 32 );
