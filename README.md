@@ -16,3 +16,10 @@ Bug:
 注：
 權重方面參考 =》 https://github.com/kuruwa2/Dark-Chess-AI/tree/master/code
 產生節點的方法原本很複雜，今天下午被 黃嘉佑 學長提了一提，便直接參考原程式的expand function。
+
+補充：
+有同學反映編譯時沒問題但是執行起來卻無法動彈。
+方法：
+目前我都是用C++17在編譯，建議安裝mingw6.3或以上。
+這裏提供好心的學長Jerry Yang整理好的安裝方法 -> https://blog.yangjerry.tw/2019/11/30/devcplusplus-gplusplus-8/?fbclid=IwAR0USywCQVmIE_vGCJe7HDiihDNvYCAGebEBydBsyMUauRt9A9cLBBextIw
+淺顯易懂的教學！
