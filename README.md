@@ -10,6 +10,13 @@
 1. 沒有對子節點做優先排序加强Alpha-Beta Pruning的效益
 2. 完全不考量關閉的棋子 （ 非不得已不走 ）
 
+## Usage
+
+```bash
+make all    # build
+make clean  # clean all compile link file
+```
+
 Bug:
 程式會反復在小區内移動，沒有對重複動作這件事做防呆。
 
