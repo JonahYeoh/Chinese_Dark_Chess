@@ -12,7 +12,7 @@ MyAI::~MyAI(void){}
 int MyAI::evaluation_fn( State & state, int color )
 {
 	int R = 0;
-	const int marks[7] = { 50, 30, 20, 10, 5, 25, 2 };
+	const int marks[7] = { 5, 25, 5, 10, 20, 30, 50 };
 	int *board = (int*)malloc(sizeof(int)*32);
 	memset(board, 0, 32 * sizeof( int ) );
 	state.getBoard( board );
