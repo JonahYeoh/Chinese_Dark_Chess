@@ -14,7 +14,7 @@ int MyAI::evaluation_fn( State & state, int color )
 	int R = 0;
 	const int marks[7] = { 50, 30, 20, 10, 5, 25, 2 };
 	int *board = (int*)malloc(sizeof(int)*32);
-	memset(board, 0, 32);
+	memset(board, 0, 32 * sizeof( int ) );
 	state.getBoard( board );
 	for ( int index = 0; index < 32; index++ )
 	{
@@ -33,8 +33,8 @@ int MyAI::evaluation_fn( State & state, int color )
 int MyAI::min_value( State & state, int alpha, int beta, int depth )
 {	
 	int min = INT_MAX, value, size, i = 0;
-	int *result = (int*)malloc(sizeof(int)*100);	memset( result, 0, 100 );
-	int *board = (int*)malloc(sizeof(int)*32);		memset( board, 0, 32 );
+	int *result = (int*)malloc(sizeof(int)*100);	memset( result, 0, 100 * sizeof( int ) );
+	int *board = (int*)malloc(sizeof(int)*32);		memset( board, 0, 32 * sizeof( int ) );
 	state.getBoard( board );
 	size = this->Expand( board, state.getColor(), result );
 	if ( depth >= DLIMIT || size < 1 )
@@ -63,8 +63,8 @@ int MyAI::min_value( State & state, int alpha, int beta, int depth )
 int MyAI::max_value( State & state, int alpha, int beta, int depth )
 {
 	int max = INT_MIN, value, size, i = 0;
-	int *result = (int*)malloc(sizeof(int)*100);	memset( result, 0, 100 );
-	int *board = (int*)malloc(sizeof(int)*32);		memset( board, 0, 32 );
+	int *result = (int*)malloc(sizeof(int)*100);	memset( result, 0, 100 * sizeof(int) );
+	int *board = (int*)malloc(sizeof(int)*32);		memset( board, 0, 32 * sizeof(int) );
 	state.getBoard( board );
 	size = this->Expand( board, state.getColor(), result );
 	if ( depth >= DLIMIT || size < 1 )
@@ -274,7 +274,7 @@ void MyAI::generateMove(char move[6])
 	state.setColor( Color );
 	int alpha = INT_MIN, beta = INT_MAX;
 	int best_action = -1;
-	int *Result = (int*)malloc(sizeof(int)*100);
+	int *Result = (int*)malloc(sizeof(int)*100); memset( Result, 0, 100 * sizeof( int ) );
 	int count = this->Expand(this->Board,this->Color,Result);
 	int startPoint = 0,endPoint = 0;
 	if ( count <= 3 || rand() % 100 >= 55 ) // random move
