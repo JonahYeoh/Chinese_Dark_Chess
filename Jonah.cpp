@@ -303,7 +303,7 @@ void MyAI::generateMove(char move[6])
 			endPoint   = Answer%100;
 			sprintf(move, "%c%c-%c%c",'a'+(startPoint%4),'1'+(7-startPoint/4),'a'+(endPoint%4),'1'+(7-endPoint/4));
 		}
-		free(Result);
+		// free(Result);
 	} 
 	else
 	{
