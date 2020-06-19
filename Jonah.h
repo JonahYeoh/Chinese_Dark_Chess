@@ -69,13 +69,9 @@ public:
 	bool time_left(const char* data[], char* response);// 16
 	bool showboard(const char* data[], char* response);// 17
 	
-	int min_value( State & state, int alpha, int beta, int depth, const int limit );//
-	int max_value( State & state, int alpha, int beta, int depth, const int limit );//
 	int utility_test( State & state, int color, int depth );//
 	int progressive_deepening( void );
-	int endGame( void );
 	int negascout( State & state, int alpha, int beta, int depth, const int limit );
-	int dfs( int current, int target, list<int> pathway, bool visited[32] );
 private:
 	int Color;
 	int Red_Time, Black_Time;
