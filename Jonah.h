@@ -6,6 +6,7 @@
 #include <math.h>
 #include <time.h>
 #include "STATE.h"
+#include "ACTION.h"
 
 #define RED 0
 #define BLACK 1
@@ -67,9 +68,14 @@ public:
 	bool time_settings(const char* data[], char* response);// 15
 	bool time_left(const char* data[], char* response);// 16
 	bool showboard(const char* data[], char* response);// 17
-	int min_value( State & state, int alpha, int beta, int depth );//
-	int max_value( State & state, int alpha, int beta, int depth );//
-	int evaluation_fn( State & state, int color );//
+	
+	int min_value( State & state, int alpha, int beta, int depth, const int limit );//
+	int max_value( State & state, int alpha, int beta, int depth, const int limit );//
+	int utility_test( State & state, int color, int depth );//
+	int progressive_deepening( void );
+	int endGame( void );
+	int negascout( State & state, int alpha, int beta, int depth, const int limit );
+	int dfs( int current, int target, list<int> pathway, bool visited[32] );
 private:
 	int Color;
 	int Red_Time, Black_Time;
