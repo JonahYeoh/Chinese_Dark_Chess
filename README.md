@@ -30,3 +30,11 @@ Bug:
 目前我都是用C++17在編譯，建議安裝mingw6.3或以上。
 這裏提供好心的學長Jerry Yang整理好的安裝方法 -> https://blog.yangjerry.tw/2019/11/30/devcplusplus-gplusplus-8/?fbclid=IwAR0USywCQVmIE_vGCJe7HDiihDNvYCAGebEBydBsyMUauRt9A9cLBBextIw
 淺顯易懂的教學！
+
+## Enhancement
+1. 對之前的程式做了些改良，參考老師的建議把原本的Alpha-Beta Pruning改成Negascout。
+2. 爲了加深搜尋深度，才有了Progressive deepening的方法（以時限和層數控制）
+3. 配分方面多加了深度和盤面上剩餘的所有棋子個數為計算參數
+
+## 展望
+1. 可以落實endgame的方法，讓敵方剩最後一顆棋子時有目標的去進攻。目前由於層數限制，常常落入horizon effect的窘境把充滿優勢的盤面白白斷送。
