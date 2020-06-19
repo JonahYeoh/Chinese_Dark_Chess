@@ -1,93 +1,96 @@
 #include <time.h>
 #include <climits>
+#include <algorithm>
 #include "Jonah.h"
 #include "STATE.h"
+#include "ACTION.h"
+using namespace std;
 
-#define DLIMIT 5
+#define DLIMIT 15
 
 MyAI::MyAI(void){this->Color = 2;}
 
 MyAI::~MyAI(void){}
 
-int MyAI::evaluation_fn( State & state, int color )
+int MyAI::negascout( State & state, int alpha, int beta, int depth, const int limit )
+{
+	int best_action = 0;
+	if ( depth == limit )
+		return utility_test( state, Color, depth );
+	int score = INT_MIN;
+	int n = beta, current;
+	list<Action> spaces = state.getChilds2();
+	int size = spaces.size();
+	if ( size < 1 ) return utility_test( state, Color, depth );
+	while ( spaces.size() > 0 )
+	{
+		State child_state = state;
+		child_state.switchColor();
+		Action action = spaces.back(); spaces.pop_back();
+		int mov[2] = { 0 }; action.getAction( mov );
+		child_state.walkover( mov );
+		
+		current = -negascout( child_state, -n, -max(alpha, score), depth+1, limit );
+		if ( current > score )
+		{
+			if ( n == beta )
+				score = current;
+			else if ( limit - depth > 3 )
+				score = -negascout( child_state, -beta, -current, depth+1, limit );
+		}
+		if ( score >= beta ) return score;
+		n = max(alpha, score) + 1;
+	}
+	return score;
+}
+
+int MyAI::utility_test( State & state, int color, int depth )
 {
 	int R = 0;
-	const int marks[7] = { 5, 25, 5, 10, 20, 30, 50 };
+	const int marks[7] = { 2, 25, 5, 10, 20, 30, 50 };
 	int *board = (int*)malloc(sizeof(int)*32);
+	int *cc = (int*)malloc(sizeof(int)*14);	memset(cc,0,sizeof(int)*14);
 	memset(board, 0, 32 * sizeof( int ) );
 	state.getBoard( board );
+	state.getCloseBoard( cc );
 	for ( int index = 0; index < 32; index++ )
 	{
 		if ( board[index] == -2 || board[index] == -1 ) continue;
 		int score = marks[(board[index]%7)];
 		int clr = board[index] / 7;
 		if ( clr == color )
+		{
 			R += score;
+		}
 		else
+		{
 			R -= score;
+		}
 	}
 	free( board );
-	return R;
-}
-
-int MyAI::min_value( State & state, int alpha, int beta, int depth )
-{	
-	int min = INT_MAX, value, size, i = 0;
-	int *result = (int*)malloc(sizeof(int)*100);	memset( result, 0, 100 * sizeof( int ) );
-	int *board = (int*)malloc(sizeof(int)*32);		memset( board, 0, 32 * sizeof( int ) );
-	state.getBoard( board );
-	size = this->Expand( board, state.getColor(), result );
-	if ( depth >= DLIMIT || size < 1 )
-		return evaluation_fn( state, Color );
-	while ( i < size )
+	int r_counter = 0, b_counter = 0;
+	for ( int seq = 0; seq < 7; seq++ )
 	{
-		State child_state = state;
-		child_state.switchColor();
-		int action = result[i++];
-		int mov[2] = { 0 };
-		mov[0] = action / 100; mov[1] = action % 100;
-		child_state.walkover( mov );
-		value = max_value( child_state, alpha, beta, depth+1 );	// fprintf(stderr, "max value : %d\n", value );
-		if ( value <= alpha )
-		{
-			free( board ); free( result );
-			return value;
-		}
-		if ( value < min ) min = value;
-		if ( value < beta ) beta = value;
+		if ( color == 0 )
+			R += cc[seq] * marks[seq];
+		else
+			R -= cc[seq] * marks[seq];
+		if ( cc[seq] == 0 ) r_counter++;
 	}
-	free( board ); free( result );
-	return min;
-}
-
-int MyAI::max_value( State & state, int alpha, int beta, int depth )
-{
-	int max = INT_MIN, value, size, i = 0;
-	int *result = (int*)malloc(sizeof(int)*100);	memset( result, 0, 100 * sizeof(int) );
-	int *board = (int*)malloc(sizeof(int)*32);		memset( board, 0, 32 * sizeof(int) );
-	state.getBoard( board );
-	size = this->Expand( board, state.getColor(), result );
-	if ( depth >= DLIMIT || size < 1 )
-		return evaluation_fn( state, Color );
-	while ( i < size )
+	if ( color == 0 && r_counter == 7 ) return INT_MIN;
+	for ( int seq = 0; seq < 7; seq++ )
 	{
-		State child_state = state;
-		child_state.switchColor();
-		int action = result[i++];
-		int mov[2] = { 0 };
-		mov[0] = action / 100; mov[1] = action % 100;
-		child_state.walkover( mov );
-		value = min_value( child_state, alpha, beta, depth+1 );	// fprintf(stderr, "min value : %d\n", value );
-		if ( value >= beta )
-		{
-			free( board ); free( result );
-			return value;
-		}
-		if ( value > max ) max = value;
-		if ( value > alpha ) alpha = value;
+		if ( color == 1 )
+			R += cc[seq+7] * marks[seq];
+		else
+			R -= cc[seq+7] * marks[seq];
+		if ( cc[seq+7] == 0 )	b_counter++;
 	}
-	free( board ); free( result );
-	return max;
+	if ( color == 1 && b_counter == 7 ) return INT_MIN;
+	if ( color == 1 && r_counter == 7 ) return INT_MAX;
+	if ( color == 0 && b_counter == 7 ) return INT_MAX;
+	free( cc );
+	return R * ( DLIMIT * 2 - depth ) + rand() % 10;
 }
 
 bool MyAI::protocol_version(const char* data[], char* response){
@@ -227,7 +230,6 @@ void MyAI::initBoardState ()
 	                            	empty  RK   RR   RN   RN   RR   RC   RP  dark  BK   BG   BM   BR   BN   BC   BP 
 	*/
 	// initial board
-	fprintf(stderr, "wondering...\n\n\n");
 	char iCurrentPosition[32];
 	for(int i = 0; i < 32; i++){ iCurrentPosition[i] = 'X'; }
 	int iPieceCount[14] = {1, 2, 2, 2, 2, 2, 5, 1, 2, 2, 2, 2, 2, 5};
@@ -264,22 +266,76 @@ void MyAI::initBoardState ()
 	this->Pirnf_Chessboard();
 }
 
+// v2
+int MyAI::progressive_deepening( void )
+{
+	clock_t begin = clock();
+	srand( time( NULL ) );
+	double TIME_BOUND = 15.0;
+	int best_action, dlimit = 3, max = INT_MIN, alpha = INT_MIN, beta = INT_MAX;
+	int mov[2] = { 0 };
+	State state;	state.setBoard( this->Board );	state.setColor( Color );	state.setCloseBoard( this->CloseChess );
+	// ensure that I can definitely produce a relatively good valid moves
+	
+	list<Action> spaces = state.getChilds2();	// need enhancement
+	double INCREMENT = ( clock() - begin ) / CLOCKS_PER_SEC;
+	Action base_action = spaces.back();
+	base_action.getAction( mov );
+	best_action = mov[0] * 100 + mov[1];
+	
+	fprintf( stderr, "src %d => dst %d\n\n", mov[0], mov[1] );
+	double elapsed = ( clock() - begin ) / CLOCKS_PER_SEC;
+	if ( spaces.size() <= 3 ) TIME_BOUND = ( spaces.size() / 10 ) * TIME_BOUND;
+	if ( spaces.size() >= 100 ) TIME_BOUND = 0.8 * TIME_BOUND;
+	
+	int score = INT_MIN, n = beta;
+	while ( elapsed + INCREMENT < TIME_BOUND )	
+	{
+		while ( spaces.size() > 0 )
+		{
+			State child = state;
+			Action action = spaces.back();	spaces.pop_back();
+			action.getAction( mov );
+			child.walkover( mov );
+			int value = -negascout( child, -n, -std::max(alpha, score), 0, dlimit );
+			if ( value > score )
+			{
+				if ( n == beta ) // null window
+				{
+					score = value;
+					best_action = mov[0] * 100 + mov[1];
+				}
+				else
+				{
+					score = -negascout( child, -beta, -value, 0, dlimit ); // zero window
+					best_action = mov[0] * 100 + mov[1];
+				}
+			}
+			fprintf( stderr, "score -> %d\n", score );
+			if ( score >= beta )
+				return mov[0] * 100 + mov[1]; // best move
+			n = std::max(alpha, score) + 1;
+		}
+		elapsed = ( clock() - begin ) / CLOCKS_PER_SEC;
+		if ( elapsed * 2 >= TIME_BOUND ) return best_action;
+		dlimit++;
+		if ( dlimit > DLIMIT ) return best_action;
+		spaces = state.getChilds2();
+	}
+	fprintf( stderr, "over time\n\n" );
+	return best_action;
+}
+
 void MyAI::generateMove(char move[6])
 {
-	// fprintf(stderr, "Generating moves...\n");
-	srand( time( NULL ) );
-	int max = INT_MIN;
-	State state;
-	state.setBoard( this->Board );
-	state.setColor( Color );
-	int alpha = INT_MIN, beta = INT_MAX;
-	int best_action = -1;
-	int *Result = (int*)malloc(sizeof(int)*100); memset( Result, 0, 100 * sizeof( int ) );
-	int count = this->Expand(this->Board,this->Color,Result);
 	int startPoint = 0,endPoint = 0;
-	if ( count <= 3 || rand() % 100 >= 55 ) // random move
+	int *Result = (int*)malloc(sizeof(int)*100); 		memset( Result, 0, 100 * sizeof( int ) );
+	int *CoverIndex = (int*)malloc( sizeof(int) * 32 );	memset( CoverIndex, 0, 32 * sizeof( int ) );
+	int count = this->Expand(this->Board,this->Color,Result);
+	int C = 100;
+	if ( count <= 1 || rand() % C >= 90 ) // random move
 	{
-		int CoverIndex[32];
+		
 		int CoverCount = 0;
 		for(int i=0;i<32;i++)
 		{
@@ -303,32 +359,16 @@ void MyAI::generateMove(char move[6])
 			endPoint   = Answer%100;
 			sprintf(move, "%c%c-%c%c",'a'+(startPoint%4),'1'+(7-startPoint/4),'a'+(endPoint%4),'1'+(7-endPoint/4));
 		}
-		// free(Result);
-	} 
-	else
-	{
-		int i = 0; int mov[2] = { 0 };
-		while ( i < count )
+		else
 		{
-			State child = state;
-			int action = Result[i++];
-			mov[0] = action / 100; mov[1] = action % 100;
-			child.walkover( mov );
-			int value = min_value( child, alpha, beta, 0 );
-			if ( value >= beta )
-			{
-				best_action = action;
-				break;
-			}
-			if ( value > max )
-			{
-				max = value;
-				best_action = action;
-			}
-			if ( value > alpha ) alpha = value;
+			sprintf(move, "NAN");
 		}
-		startPoint = best_action / 100; // 0 - 31
-		endPoint = best_action % 100; // 0 - 31
+	} 
+	else // more than one child, a valid steps is promised
+	{
+		int best_action = progressive_deepening();
+		startPoint = best_action / 100;	// 0 - 31
+		endPoint = best_action % 100;	// 0 - 31
 		sprintf(move, "%c%c-%c%c",'a'+ ( startPoint % 4 ),'1'+ (7 - startPoint / 4),'a'+ (endPoint % 4),'1'+ ( 7 - endPoint / 4));
 	}
 	char chess_Start[4]="";
@@ -341,11 +381,13 @@ void MyAI::generateMove(char move[6])
 	printf("move:%s\n",move);
 	printf("--------------------------\n");
 	this->Pirnf_Chessboard();
-	free( Result );
+	free( CoverIndex );
+	free(Result);
 }
 
 void MyAI::MakeMove(const char move[6])
 {
+	// fprintf(stderr, "MakeMove()\n");
 	int src, dst;
 	src = ('8'-move[1])*4+(move[0]-'a');
 	if(move[2]=='('){ 
@@ -355,6 +397,14 @@ void MyAI::MakeMove(const char move[6])
 	}else { 
 		dst = ('8'-move[4])*4+(move[3]-'a');
 		printf("# Search call move(): move : %d-%d \n",src,dst);
+		if ( this->Board[dst] != -2 && this->Board[dst] != -1 )
+		{
+			const int mapping[7] = { 6, 5, 4, 3, 2, 1, 0 };
+			int index = mapping[this->Board[dst] % 7];
+			int clr = this->Board[dst] / 7;
+			if ( clr == 1 ) index += 7;
+			this->CloseChess[index] -= 1;
+		} 
 		this->Board[dst] = this->Board[src];
 		this->Board[src] = CHESS_EMPTY;
 		Pirnf_Chessboard();
@@ -470,10 +520,6 @@ int MyAI::Expand(int* Board,int color,int *Result) // []
 	return ResultCount;
 }
 
-
-
-
-
 //---------------------------- Display --------------------------------
 //Display chess board
 void MyAI::Pirnf_Chessboard()
@@ -501,7 +547,6 @@ void MyAI::Pirnf_Chessboard()
 		Pirnf_Chess(this->Board[i],chess_name);
 		sprintf(temp,"%5s", chess_name);
 		strcat(Mes,temp);
-		
 		
 	}
 	strcat(Mes,"\n\n     ");
