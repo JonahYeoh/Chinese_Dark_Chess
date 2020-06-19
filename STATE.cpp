@@ -2,7 +2,7 @@
 #include "ACTION.h"
 State::State()
 {
-	memset( board, 0, 32 );
+	memset( board, 0, 32 * sizeof( int ) );
 }
 
 State::State(const State & s )
